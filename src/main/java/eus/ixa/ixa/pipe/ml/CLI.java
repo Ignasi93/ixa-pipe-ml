@@ -116,7 +116,7 @@ public class CLI {
     this.parserTrainerParser = this.subParsers.addParser(PARSE_TRAINER_NAME)
         .help("Constituent Parser training CLI");
     loadParserTrainingParameters();
-    this.tokevalParser = this.subParsers.addParser(TOKEVAL_PARSER_NAME);
+    this.tokevalParser = this.subParsers.addParser(TOKEVAL_PARSER_NAME).help("Tokeval CLI");
     loadTokevalParameters();
     this.evalParser = this.subParsers.addParser(EVAL_PARSER_NAME)
         .help("Evaluation CLI");
@@ -251,7 +251,7 @@ public class CLI {
   }
   
   /**
-   * Main evaluation entry point for sequence labelling.
+   * Main evaluation entry point for tokenizer.
    *
    * @throws IOException
    *           throws exception if test set not available
@@ -260,10 +260,12 @@ public class CLI {
 
     final String lang = this.parsedArguments.getString("language");
     final String testset = this.parsedArguments.getString("testset");
-    final Properties props = setTokevalProperties(lang, testset);
+    //Added
+    final String prediction = this.parsedArguments.getString("prediction");
+    final Properties props = setTokevalProperties(lang, testset, prediction);
     final TokenizerEvaluate evaluator = new TokenizerEvaluate(
         props);
-    //evaluator.evaluateAccuracy();
+    evaluator.evaluateAccuracy();
   }
 
   /**
@@ -278,13 +280,14 @@ public class CLI {
     final String lang = this.parsedArguments.getString("language");
     final String model = this.parsedArguments.getString("model");
     final String testset = this.parsedArguments.getString("testset");
+    final String prediction = this.parsedArguments.getString("prediction");
     final String corpusFormat = this.parsedArguments.getString("corpusFormat");
     final String netypes = this.parsedArguments.getString("types");
     final String clearFeatures = this.parsedArguments
         .getString("clearFeatures");
     final String unknownAccuracy = this.parsedArguments
         .getString("unknownAccuracy");
-    final Properties props = setEvalProperties(lang, model, testset,
+    final Properties props = setEvalProperties(lang, model, testset, prediction,
         corpusFormat, netypes, clearFeatures, unknownAccuracy);
     final SequenceLabelerEvaluate evaluator = new SequenceLabelerEvaluate(
         props);
@@ -370,6 +373,10 @@ public class CLI {
         .help("Choose language.\n");
     this.tokevalParser.addArgument("-t", "--testset").required(true)
         .help("The test or reference corpus.\n");
+    //Added
+    // It could not be "-p" because of --params
+    this.tokevalParser.addArgument("-r", "--prediction").required(true)
+    	.help("The prediction corpus.\n");
   }
 
 
@@ -445,13 +452,16 @@ public class CLI {
    * @return the properties object
    */
   private Properties setEvalProperties(final String language,
-      final String model, final String testset, final String corpusFormat,
-      final String netypes, final String clearFeatures,
-      final String unknownAccuracy) {
+      final String model, final String testset, final String prediction,
+      final String corpusFormat, final String netypes,
+      final String clearFeatures, final String unknownAccuracy) {
     final Properties evalProperties = new Properties();
     evalProperties.setProperty("language", language);
     evalProperties.setProperty("model", model);
     evalProperties.setProperty("testset", testset);
+    //Added
+    evalProperties.setProperty("prediction", prediction);
+    //Added
     evalProperties.setProperty("corpusFormat", corpusFormat);
     evalProperties.setProperty("types", netypes);
     evalProperties.setProperty("clearFeatures", clearFeatures);
@@ -477,11 +487,13 @@ public class CLI {
     return parsevalProperties;
   }
   
-  private Properties setTokevalProperties(final String language, final String testset) {
-    final Properties parsevalProperties = new Properties();
-    parsevalProperties.setProperty("language", language);
-    parsevalProperties.setProperty("testset", testset);
-    return parsevalProperties;
+  private Properties setTokevalProperties(final String language, final String prediction, final String testset) {
+    final Properties tokevalProperties = new Properties();
+    tokevalProperties.setProperty("language", language);
+    tokevalProperties.setProperty("testset", testset);
+    //Added
+    tokevalProperties.setProperty("prediction", prediction);
+    return tokevalProperties;
   }
 
 }
