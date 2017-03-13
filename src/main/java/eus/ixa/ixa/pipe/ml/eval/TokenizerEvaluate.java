@@ -3,6 +3,8 @@ package eus.ixa.ixa.pipe.ml.eval;
 import java.util.Properties;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Scanner;
+import java.io.*;
 import java.io.IOException;
 import opennlp.tools.util.eval.Mean;
 
@@ -15,7 +17,7 @@ public class TokenizerEvaluate {
 	private final Mean wordAccuracy = new Mean();
 	private final Mean sentenceAccuracy = new Mean();
 	private ArrayList < ArrayList < String > > test = new ArrayList < ArrayList < String > > ();
-	private ArrayList < ArrayList < String > > pred = new ArrayList < ArrayList < String > > ();;
+	private ArrayList < ArrayList < String > > pred = new ArrayList < ArrayList < String > > ();
 	
 	/**
 	   * Construct an evaluator. It takes from the properties a prediction file and a testset.
@@ -29,27 +31,35 @@ public class TokenizerEvaluate {
     final String lang = props.getProperty ( "language" );
     final String testSet = props.getProperty ( "testset" );
     final String prediction = props.getProperty ( "prediction" );
-    
-    String[] linesTest = testSet.split ( "\\r?\\n" );
-    String[] linesPred = prediction.split ( "\\r?\\n" );
-    
-    // To avoid two loops in case both lists are equal length
-    if ( linesTest.length == linesPred.length ) {
-    	for ( int i = 0; i < linesTest.length; i++ ) {
-        	ArrayList < String > aux1 = new ArrayList < String > ( Arrays.asList ( linesTest[i].split ( "\\s+" ) ) );
-        	ArrayList < String > aux2 = new ArrayList < String > ( Arrays.asList ( linesPred[i].split ( "\\s+" ) ) );
+
+    try {
+    	
+    	File fileTest = new File ( testSet );
+    	File filePred = new File ( prediction );
+        Scanner scanTest = new Scanner ( fileTest );
+        Scanner scanPred = new Scanner ( filePred );
+        
+        // This only works if test and prediction are equal length
+        // Otherwise we need another loop
+        while ( scanTest.hasNext() ) {
+        	ArrayList < String > aux1 = new ArrayList < String > ( Arrays.asList ( scanTest.nextLine().split ( "\\s+" ) ) );
+        	//ArrayList < String > aux2 = new ArrayList < String > ( Arrays.asList ( scanPred.nextLine().split ( "\\s+" ) ) );
         	test.add ( aux1 );
-        	pred.add ( aux2 );
+        	//pred.add ( aux2 );
         }
-    } else { //I'm not sure if both lists can have different lengths, but just in case...
-	    for ( int i = 0; i < linesTest.length; i++ ) {
-	    	ArrayList < String > aux = new ArrayList < String > ( Arrays.asList ( linesTest[i].split ( "\\s+" ) ) );
-	    	test.add ( aux );
-	    }
-	    for ( int i = 0; i < linesPred.length; i++ ) {
-	    	ArrayList < String > aux = new ArrayList < String > ( Arrays.asList ( linesPred[i].split ( "\\s+" ) ) );
-	    	pred.add ( aux );
-	    }
+	while ( scanPred.hasNext() ) {
+		ArrayList < String > aux2 = new ArrayList < String > ( Arrays.asList ( scanPred.nextLine().split ( "\\s+" ) ) );
+		pred.add ( aux2 );
+	}
+
+	System.out.println (test.size());
+	System.out.println (pred.size());
+        
+        scanTest.close();
+        scanPred.close();
+        
+    } catch ( FileNotFoundException e ) {
+    	System.out.println ( e );
     }    
   }
   
